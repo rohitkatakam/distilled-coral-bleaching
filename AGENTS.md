@@ -89,21 +89,39 @@ This project uses a **hybrid local/Colab workflow** due to GPU constraints:
    - Save to `data/splits/` and commit to Git
    - Document split statistics in `data/README.md`
 
-3. **Core Utilities**:
+3. **Google Drive Setup** (USER ACTION - REQUIRED FOR COLAB TRAINING):
+   - Create folder structure in Google Drive:
+     ```
+     /content/drive/MyDrive/coral-bleaching/
+     ├── data/
+     │   └── raw/
+     │       ├── bleached/  (upload 485 images)
+     │       └── healthy/   (upload 438 images)
+     ├── checkpoints/  (create empty folder for training outputs)
+     └── logs/  (optional, only if not using wandb)
+     ```
+   - **Upload to Google Drive**: Copy `data/raw/bleached/` and `data/raw/healthy/` folders with all images (~923 images total)
+   - **Commit to Git**: Split manifests (`data/splits/*.csv`) are lightweight and go in Git, not Drive
+   - **Important**: Ensure `.gitignore` allows `data/splits/*.csv` but blocks `data/raw/` (images)
+   - **Path Resolution**: Split CSVs use relative paths (e.g., `data/raw/bleached/image.jpg`). In Colab, dataloaders will resolve these relative to the Drive mount point.
+
+4. **Core Utilities**:
    - `utils/data_loader.py`: Dataset class (reads splits), dataloaders, augmentation pipeline
    - `utils/preprocessing.py`: Image transforms for train/val/test modes
    - `utils/metrics.py`: Accuracy, precision, recall, F1, confusion matrix, wandb helpers
    - `utils/visualization.py`: Training curves, confusion matrices, sample grids
    - `utils/env_utils.py`: Environment detection (Colab vs local), path resolution
 
-4. **Testing**:
+5. **Testing**:
    - Write unit tests for data pipeline (test with local data)
    - Verify splits load correctly
    - Test augmentation pipeline
 
 #### Deliverables
-- [ ] `requirements.txt` and `requirements-colab.txt` created
-- [ ] Data splits created and committed to Git
+- [x] `requirements.txt` and `requirements-colab.txt` created
+- [x] Data splits created and committed to Git
+- [x] `.gitignore` updated to allow split CSVs
+- [x] Google Drive folder structure created and raw images uploaded
 - [ ] All utility modules implemented
 - [ ] Unit tests passing
 - [ ] Local data pipeline verified
@@ -575,8 +593,19 @@ This section is updated after each session to track overall progress and maintai
 
 ### Current Status
 - **Active Phase**: Phase 0 (Foundation & Environment Setup)
-- **Phase Status**: NOT_STARTED
+- **Phase Status**: IN_PROGRESS (4/5 tasks completed)
 - **Last Updated**: 2025-11-12
+
+### Completed Tasks (Phase 0)
+- ✅ Created `requirements.txt` and `requirements-colab.txt`
+- ✅ Installed local environment (all dependencies working)
+- ✅ Implemented data splitting script (`scripts/create_data_splits.py`)
+- ✅ Generated train/val/test splits (645/139/139 images, random seed 42)
+- ✅ Committed split manifests to Git (`data/splits/*.csv`)
+- ✅ Updated `data/README.md` with split statistics
+- ✅ Updated `.gitignore` to allow split CSVs in Git
+- ✅ Uploaded raw images to Google Drive (923 images in bleached/healthy folders)
+- ✅ Created checkpoint directory structure in Google Drive
 
 ### Completed Training Runs
 None yet.
@@ -591,15 +620,21 @@ None yet.
 None.
 
 ### Next Immediate Action
-Begin Phase 0: Foundation & Environment Setup
-- Create `requirements.txt` and `requirements-colab.txt`
-- Implement data splitting script
-- Implement core utilities
+Implement core utilities for Phase 0:
+- `utils/data_loader.py`: Dataset class (reads split CSVs), dataloaders, augmentation pipeline
+- `utils/preprocessing.py`: Image transforms for train/val/test modes
+- `utils/metrics.py`: Accuracy, precision, recall, F1, confusion matrix, wandb helpers
+- `utils/visualization.py`: Training curves, confusion matrices, sample grids
+- `utils/env_utils.py`: Environment detection (Colab vs local), path resolution
+
+Then write unit tests for data pipeline to complete Phase 0.
 
 ### Notes
 - Project roadmap finalized with hybrid local/Colab workflow
 - Workflow optimized for no-GPU local environment + Colab training
 - Emphasis on simple, self-contained Colab notebook (no AI assistance needed)
+- **Google Drive documentation added**: See Phase 0, Task 3 for upload instructions
+- Data splits use relative paths for portability between local and Colab environments
 
 ---
 

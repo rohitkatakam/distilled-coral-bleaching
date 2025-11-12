@@ -14,7 +14,6 @@ venv/
 
 # Data artifacts (tracked selectively)
 data/processed/
-data/splits/
 data/raw/
 checkpoints/
 logs/
