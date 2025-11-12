@@ -1,0 +1,59 @@
+# Dataset settings
+dataset:
+  raw_dir: data/raw
+  processed_dir: data/processed
+  splits_dir: data/splits
+  train_split: train
+  val_split: val
+  test_split: test
+  image_size: [224, 224]
+
+# Augmentation pipeline
+augmentations:
+  random_flip: true
+  color_jitter:
+    enabled: true
+    brightness: 0.1
+    contrast: 0.1
+    saturation: 0.1
+    hue: 0.05
+  normalization:
+    mean: [0.485, 0.456, 0.406]
+    std: [0.229, 0.224, 0.225]
+
+# Model hyperparameters
+model:
+  teacher:
+    name: resnet50
+    pretrained: true
+    checkpoint_path: checkpoints/teacher.pt
+  student:
+    name: mobilenet_v3_small
+    pretrained: false
+    checkpoint_path: checkpoints/student.pt
+  distillation:
+    temperature: 4.0
+    alpha: 0.7
+
+# Training configuration
+training:
+  device: cuda
+  epochs: 50
+  batch_size: 32
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  optimizer: adam
+  scheduler: cosine
+
+# Dataloader options
+dataloader:
+  num_workers: 4
+  pin_memory: true
+  persistent_workers: true
+
+# Logging / tracking
+logging:
+  output_dir: logs
+  experiment_name: baseline
+  tracking_uri: null  # e.g., mlflow or wandb URI
+  save_checkpoints: true

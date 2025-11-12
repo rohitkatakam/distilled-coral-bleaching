@@ -1,0 +1,29 @@
+# Byte-compiled / cache files
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Virtual environments
+.venv/
+venv/
+
+# Editors / OS
+.DS_Store
+.idea/
+.vscode/
+
+# Data artifacts (tracked selectively)
+data/processed/
+data/splits/
+data/raw/
+checkpoints/
+logs/
+runs/
+
+# Model weights and large outputs
+*.pt
+*.pth
+*.ckpt
+
+# Notebooks
+notebooks/.ipynb_checkpoints/
