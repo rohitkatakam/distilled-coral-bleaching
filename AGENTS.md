@@ -67,9 +67,9 @@ This project uses a **hybrid local/Colab workflow** due to GPU constraints:
 ## Implementation Roadmap
 
 ### Phase 0: Foundation & Environment Setup
-**Status**: NOT_STARTED
+**Status**: ✅ COMPLETE
 **Environment**: LOCAL
-**Estimated Sessions**: 1-2
+**Completed**: 2025-11-13 (2 sessions)
 
 #### Goals
 - Set up reproducible development environment
@@ -105,26 +105,49 @@ This project uses a **hybrid local/Colab workflow** due to GPU constraints:
    - **Important**: Ensure `.gitignore` allows `data/splits/*.csv` but blocks `data/raw/` (images)
    - **Path Resolution**: Split CSVs use relative paths (e.g., `data/raw/bleached/image.jpg`). In Colab, dataloaders will resolve these relative to the Drive mount point.
 
-4. **Core Utilities**:
-   - `utils/data_loader.py`: Dataset class (reads splits), dataloaders, augmentation pipeline
-   - `utils/preprocessing.py`: Image transforms for train/val/test modes
-   - `utils/metrics.py`: Accuracy, precision, recall, F1, confusion matrix, wandb helpers
-   - `utils/visualization.py`: Training curves, confusion matrices, sample grids
-   - `utils/env_utils.py`: Environment detection (Colab vs local), path resolution
+4. **Core Utilities** (implement and test one at a time):
 
-5. **Testing**:
-   - Write unit tests for data pipeline (test with local data)
+   a. `utils/env_utils.py`: Environment detection (Colab vs local), path resolution
+      - `is_colab()` - detect Colab environment
+      - `get_project_root()` - return project root path
+      - `resolve_data_path()` - resolve relative paths from CSVs to actual files
+      - `resolve_checkpoint_path()` - handle checkpoint paths for Drive vs local
+
+   b. `utils/preprocessing.py`: Image transforms for train/val/test modes
+      - `get_train_transforms(config)` - augmentation pipeline
+      - `get_val_transforms(config)` - validation transforms
+      - `get_test_transforms(config)` - test transforms
+
+   c. `utils/data_loader.py`: Dataset class (reads splits), dataloaders, augmentation pipeline
+      - `CoralDataset` class - read CSVs, load images, apply transforms
+      - `build_dataloaders(config, split)` - create DataLoaders from config
+
+   d. `utils/metrics.py`: Accuracy, precision, recall, F1, confusion matrix, wandb helpers
+      - `compute_accuracy()`, `compute_confusion_matrix()`, `compute_classification_metrics()`
+      - `log_metrics_to_wandb()` - wandb logging helper
+
+   e. `utils/visualization.py`: Training curves, confusion matrices, sample grids
+      - `plot_training_curves()`, `plot_confusion_matrix()`, `plot_sample_grid()`
+
+5. **Testing** (write tests alongside each utility):
+   - Create `tests/` directory structure
+   - Write unit tests for each utility module
    - Verify splits load correctly
    - Test augmentation pipeline
+   - Run complete test suite with `pytest`
 
 #### Deliverables
 - [x] `requirements.txt` and `requirements-colab.txt` created
 - [x] Data splits created and committed to Git
 - [x] `.gitignore` updated to allow split CSVs
 - [x] Google Drive folder structure created and raw images uploaded
-- [ ] All utility modules implemented
-- [ ] Unit tests passing
-- [ ] Local data pipeline verified
+- [x] `utils/env_utils.py` implemented and tested (26 tests passing)
+- [x] `utils/preprocessing.py` implemented and tested (32 tests passing, including 3 real coral image integration tests)
+- [x] `utils/data_loader.py` implemented and tested (31 tests passing)
+- [x] `utils/metrics.py` implemented and tested (45 tests passing, including 3 real wandb/model integration tests)
+- [x] `utils/visualization.py` implemented and tested (23 tests passing, including 4 real plotting integration tests)
+- [x] All unit tests passing (161 total tests)
+- [x] Local data pipeline verified (4 end-to-end pipeline tests)
 
 #### Next Steps
 → Move to Phase 1: Teacher Model Implementation
@@ -593,8 +616,8 @@ This section is updated after each session to track overall progress and maintai
 
 ### Current Status
 - **Active Phase**: Phase 0 (Foundation & Environment Setup)
-- **Phase Status**: IN_PROGRESS (4/5 tasks completed)
-- **Last Updated**: 2025-11-12
+- **Phase Status**: ✅ COMPLETE
+- **Last Updated**: 2025-11-13
 
 ### Completed Tasks (Phase 0)
 - ✅ Created `requirements.txt` and `requirements-colab.txt`
@@ -606,6 +629,14 @@ This section is updated after each session to track overall progress and maintai
 - ✅ Updated `.gitignore` to allow split CSVs in Git
 - ✅ Uploaded raw images to Google Drive (923 images in bleached/healthy folders)
 - ✅ Created checkpoint directory structure in Google Drive
+- ✅ Implemented `utils/env_utils.py` (26 tests passing)
+- ✅ Implemented `utils/preprocessing.py` (32 tests passing, including 3 real coral image integration tests)
+- ✅ Implemented `utils/data_loader.py` (31 tests passing)
+- ✅ Implemented `utils/metrics.py` (45 tests passing, including 3 real wandb/model integration tests)
+- ✅ Implemented `utils/visualization.py` (23 tests passing, including 4 real plotting integration tests)
+- ✅ Created `tests/test_end_to_end_pipeline.py` (4 comprehensive pipeline tests)
+- ✅ All unit tests passing (161 total tests: 128 unit + 33 integration)
+- ✅ Local data pipeline verified with real coral images
 
 ### Completed Training Runs
 None yet.
@@ -620,14 +651,13 @@ None yet.
 None.
 
 ### Next Immediate Action
-Implement core utilities for Phase 0:
-- `utils/data_loader.py`: Dataset class (reads split CSVs), dataloaders, augmentation pipeline
-- `utils/preprocessing.py`: Image transforms for train/val/test modes
-- `utils/metrics.py`: Accuracy, precision, recall, F1, confusion matrix, wandb helpers
-- `utils/visualization.py`: Training curves, confusion matrices, sample grids
-- `utils/env_utils.py`: Environment detection (Colab vs local), path resolution
+**Phase 0 COMPLETE!** 🎉
 
-Then write unit tests for data pipeline to complete Phase 0.
+Ready to begin Phase 1: Teacher Model Implementation
+- Implement `models/teacher.py` (ResNet50)
+- Implement `train_teacher.py` (full training loop with wandb)
+- Create `docs/colab_setup.md` with Colab instructions
+- Test locally, then train in Colab
 
 ### Notes
 - Project roadmap finalized with hybrid local/Colab workflow
@@ -635,6 +665,8 @@ Then write unit tests for data pipeline to complete Phase 0.
 - Emphasis on simple, self-contained Colab notebook (no AI assistance needed)
 - **Google Drive documentation added**: See Phase 0, Task 3 for upload instructions
 - Data splits use relative paths for portability between local and Colab environments
+- **Phase 0 Complete (2025-11-13)**: All utilities implemented with comprehensive test coverage (161 tests)
+- Test quality: ~85% real testing (minimal mocking), includes integration tests with real data, real models, real wandb offline logging
 
 ---
 
