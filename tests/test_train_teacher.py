@@ -19,6 +19,8 @@ from train_teacher import (
     validate,
 )
 from models.teacher import TeacherModel
+from utils.data_loader import build_dataloaders
+from torch.utils.data import DataLoader
 
 
 class TestArgumentParsing:
@@ -508,3 +510,150 @@ class TestTrainingIntegration:
             # This should not raise any errors
             metrics = train_one_epoch(new_model, train_loader, criterion, new_optimizer, device, epoch=6)
             assert metrics is not None
+
+
+class TestBuildDataloadersIntegration:
+    """Integration tests for build_dataloaders usage in training script.
+
+    These tests verify that build_dataloaders() is called correctly and
+    catches parameter mismatches that could cause runtime errors.
+    """
+
+    @pytest.fixture
+    def temp_config_path(self):
+        """Create a temporary config file for testing."""
+        config = {
+            'dataset': {
+                'splits_dir': 'data/splits',
+                'train_split': 'train',
+                'val_split': 'val',
+                'test_split': 'test',
+                'image_size': [224, 224],
+            },
+            'augmentations': {
+                'random_flip': True,
+                'color_jitter': {
+                    'enabled': True,
+                    'brightness': 0.1,
+                    'contrast': 0.1,
+                    'saturation': 0.1,
+                    'hue': 0.05,
+                },
+                'normalization': {
+                    'mean': [0.485, 0.456, 0.406],
+                    'std': [0.229, 0.224, 0.225],
+                },
+            },
+            'training': {
+                'batch_size': 16,
+            },
+            'dataloader': {
+                'num_workers': 0,  # Use 0 for testing to avoid multiprocessing issues
+                'pin_memory': False,
+            },
+            'model': {
+                'teacher': {
+                    'num_classes': 2,
+                },
+            },
+        }
+
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+            yaml.dump(config, f)
+            temp_path = f.name
+
+        yield temp_path
+
+        # Cleanup
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
+
+    def test_build_dataloaders_returns_dict_of_loaders(self, temp_config_path):
+        """Test that build_dataloaders returns a dict, not a single loader.
+
+        This test verifies the correct return type and structure, preventing
+        bugs where code expects a single DataLoader but gets a dict.
+        """
+        config = load_config(temp_config_path)
+
+        dataloaders = build_dataloaders(config, splits=['train', 'val'])
+
+        # Should return a dictionary
+        assert isinstance(dataloaders, dict), "build_dataloaders should return a dict"
+        assert 'train' in dataloaders, "Dict should contain 'train' key"
+        assert 'val' in dataloaders, "Dict should contain 'val' key"
+
+        # Each value should be a DataLoader
+        assert isinstance(dataloaders['train'], DataLoader), "'train' value should be a DataLoader"
+        assert isinstance(dataloaders['val'], DataLoader), "'val' value should be a DataLoader"
+
+    def test_build_dataloaders_with_splits_parameter(self, temp_config_path):
+        """Test build_dataloaders with correct 'splits' parameter name.
+
+        This test catches TypeError if code uses wrong parameter name like
+        'split' (singular) instead of 'splits' (plural list).
+        """
+        config = load_config(temp_config_path)
+
+        # This should not raise TypeError with correct parameter name
+        dataloaders = build_dataloaders(config, splits=['train'])
+
+        assert 'train' in dataloaders
+        assert isinstance(dataloaders['train'], DataLoader)
+
+    def test_dataloaders_have_correct_batch_size(self, temp_config_path):
+        """Test that dataloaders use batch_size from config.
+
+        This verifies that batch_size is read from config, not passed as
+        a separate parameter to build_dataloaders().
+        """
+        config = load_config(temp_config_path)
+        expected_batch_size = config['training']['batch_size']
+
+        dataloaders = build_dataloaders(config, splits=['train'])
+        train_loader = dataloaders['train']
+
+        # Get actual batch size from first batch
+        for images, labels in train_loader:
+            actual_batch_size = images.shape[0]
+            # Should match config or be smaller if dataset is small
+            assert actual_batch_size <= expected_batch_size, \
+                f"Batch size {actual_batch_size} exceeds config batch size {expected_batch_size}"
+            assert actual_batch_size > 0, "Batch size should be positive"
+            break
+
+    def test_main_with_correct_dataloader_usage(self, temp_config_path):
+        """Integration test showing correct usage pattern for main().
+
+        This simulates how the fixed train_teacher.py main() function should
+        use build_dataloaders: update config with CLI batch_size, call with
+        splits parameter, unpack returned dict.
+        """
+        config = load_config(temp_config_path)
+        batch_size = 8
+
+        # Simulate what fixed main() does:
+        # 1. Apply CLI batch_size override to config
+        config['training']['batch_size'] = batch_size
+
+        # 2. Call build_dataloaders with correct parameter name
+        dataloaders = build_dataloaders(config, splits=['train', 'val'])
+
+        # 3. Unpack returned dict
+        train_loader = dataloaders['train']
+        val_loader = dataloaders['val']
+
+        # Verify loaders are usable
+        assert isinstance(train_loader, DataLoader)
+        assert isinstance(val_loader, DataLoader)
+
+        # Verify batch sizes are correct
+        for images, labels in train_loader:
+            assert images.shape[0] <= batch_size, "Train batch size should match config"
+            assert labels.shape[0] == images.shape[0], "Labels should match images"
+            break
+
+        for images, labels in val_loader:
+            assert images.shape[0] <= batch_size, "Val batch size should match config"
+            assert labels.shape[0] == images.shape[0], "Labels should match images"
+            break

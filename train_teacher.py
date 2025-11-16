@@ -239,10 +239,12 @@ def main(args=None) -> None:
     print(f"  Learning rate: {learning_rate}")
     print(f"  Weight decay: {weight_decay}")
 
-    # Create dataloaders
+    # Create dataloaders (apply CLI batch_size override to config)
     print("\nLoading datasets...")
-    train_loader = build_dataloaders(config, split='train', batch_size=batch_size)
-    val_loader = build_dataloaders(config, split='val', batch_size=batch_size)
+    config['training']['batch_size'] = batch_size
+    dataloaders = build_dataloaders(config, splits=['train', 'val'])
+    train_loader = dataloaders['train']
+    val_loader = dataloaders['val']
     print(f"Train batches: {len(train_loader)}, Val batches: {len(val_loader)}")
 
     # Initialize model
