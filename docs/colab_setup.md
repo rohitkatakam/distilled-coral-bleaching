@@ -448,7 +448,10 @@ Logs will be saved locally and can be synced later:
 1. **Verify checkpoint saved to Drive** (Step 11)
 2. **Check W&B dashboard** for training curves
 3. **Download checkpoint** to local machine (Step 14)
-4. **Run evaluation locally** using `evaluate.py` (see main README)
+4. **Run evaluation locally**:
+   - Use `scripts/evaluate.py` to compute test metrics
+   - Create analysis scripts in `scripts/` for data exploration and visualization
+   - See main README for evaluation workflow details
 
 ---
 

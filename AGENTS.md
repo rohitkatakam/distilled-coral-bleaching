@@ -6,11 +6,11 @@ Welcome! This document provides high-level context for future AI assistant sessi
 - **Goal**: Build a knowledge-distillation pipeline that classifies coral images into `bleached` vs `healthy`.
 - **Primary Data Source**: Kaggle Coral Bleaching Dataset (see `data/README.md` for sourcing notes).
 - **Code Layout**:
-  - `models/`: Teacher, student, and distillation scaffolding (currently placeholders).
-  - `utils/`: Planned helpers for dataloaders, preprocessing, metrics, and visualization.
+  - `models/`: Teacher, student, and distillation scaffolding.
+  - `utils/`: Helpers for dataloaders, preprocessing, metrics, and visualization.
   - `configs/`: YAML-based experiment settings plus guidelines for versioning.
-  - Root scripts (`train_teacher.py`, `train_student_baseline.py`, `train_student_kd.py`, `evaluate.py`) expose CLI entry points.
-  - `notebooks/`: Markdown stubs outlining exploratory and evaluation workflows.
+  - Root scripts (`train_teacher.py`, `train_student_baseline.py`, `train_student_kd.py`) expose training CLI entry points.
+  - `scripts/`: Utility scripts for data processing, evaluation, and analysis.
 
 ## Repo Conventions
 - Keep changes small and localized; add or update documentation alongside code.
@@ -61,6 +61,7 @@ This project uses a **hybrid local/Colab workflow** due to GPU constraints:
 - **Experiment Tracking**: Weights & Biases (wandb)
 - **Training Notebook**: Single Colab notebook with sections for teacher/student/KD training
 - **Version Control**: GitHub (public repo for Colab access)
+- **Local Development**: Python scripts in `scripts/` directory for evaluation and analysis
 
 ---
 
@@ -229,36 +230,38 @@ This project uses a **hybrid local/Colab workflow** due to GPU constraints:
    - Verify checkpoint loads correctly
 
 2. **Evaluation Script** (LOCAL):
-   - Implement `evaluate.py`:
+   - Implement `scripts/evaluate.py`:
      - Load model checkpoint (from any path)
      - Run inference on test set (CPU-compatible)
      - Compute all metrics (accuracy, precision, recall, F1)
      - Generate confusion matrix
-     - Save results to JSON/CSV for reproducibility
+     - Save results to JSON in `scripts/results/{model_name}/`
 
-3. **Data Exploration Notebook** (LOCAL):
-   - Create `notebooks/01_data_exploration.ipynb`:
+3. **Data Exploration Script** (LOCAL):
+   - Create `scripts/explore_data.py` (Python script with optional `# %%` cell markers for interactive development):
      - Load and visualize split statistics
      - Class balance analysis
      - Sample images from both classes (bleached vs healthy)
      - Image resolution and quality assessment
      - Document dataset characteristics
+     - Save plots to `scripts/results/data_exploration/`
 
-4. **Teacher Evaluation Notebook** (LOCAL):
-   - Create `notebooks/02_teacher_evaluation.ipynb`:
-     - Load teacher evaluation results
+4. **Teacher Evaluation Script** (LOCAL):
+   - Create `scripts/evaluate_teacher.py` (Python script with optional `# %%` cell markers):
+     - Load teacher evaluation results from `scripts/results/teacher/`
      - Visualize training curves from wandb
      - Display confusion matrix
      - Error analysis (visualize misclassifications)
      - Per-class performance breakdown
      - (Optional) Grad-CAM visualizations if feasible on CPU
+     - Save plots to `scripts/results/teacher/`
 
 #### Deliverables
 - [ ] Teacher checkpoint downloaded and verified
-- [ ] `evaluate.py` implemented
+- [ ] `scripts/evaluate.py` implemented
 - [ ] Teacher test metrics computed and saved
-- [ ] `notebooks/01_data_exploration.ipynb` completed
-- [ ] `notebooks/02_teacher_evaluation.ipynb` completed
+- [ ] `scripts/explore_data.py` completed with plots saved
+- [ ] `scripts/evaluate_teacher.py` completed with plots saved
 - [ ] **PAPER ARTIFACT**: Teacher baseline results (accuracy, confusion matrix, training curves)
 
 #### Paper Contributions
@@ -304,12 +307,13 @@ This project uses a **hybrid local/Colab workflow** due to GPU constraints:
 
 5. **Evaluation** (LOCAL):
    - Download student baseline checkpoint
-   - Run `evaluate.py` on student baseline
-   - Create `notebooks/03_student_baseline_comparison.ipynb`:
+   - Run `scripts/evaluate.py` on student baseline
+   - Create `scripts/compare_student_baseline.py`:
      - Compare teacher vs student baseline metrics
      - Analyze performance gap (expected 5-10% accuracy drop)
      - Compare model sizes (parameters, disk size)
      - Compare inference speed (if possible on CPU)
+     - Save plots to `scripts/results/student_baseline/`
 
 #### Deliverables
 - [ ] `models/student.py` implemented
@@ -318,7 +322,7 @@ This project uses a **hybrid local/Colab workflow** due to GPU constraints:
 - [ ] Student baseline trained in Colab
 - [ ] Student baseline checkpoint saved to Drive
 - [ ] Student baseline evaluated locally
-- [ ] `notebooks/03_student_baseline_comparison.ipynb` completed
+- [ ] `scripts/compare_student_baseline.py` completed with plots saved
 - [ ] **PAPER ARTIFACT**: Baseline comparison table (teacher vs student)
 
 #### Paper Contributions
@@ -368,11 +372,12 @@ This project uses a **hybrid local/Colab workflow** due to GPU constraints:
 
 5. **Evaluation** (LOCAL):
    - Download distilled student checkpoint
-   - Run `evaluate.py` on distilled student
-   - Create `notebooks/04_distillation_results.ipynb`:
+   - Run `scripts/evaluate.py` on distilled student
+   - Create `scripts/compare_distillation.py`:
      - Three-way comparison: Teacher | Student Baseline | Distilled Student
      - Performance improvement from distillation
      - Analyze gap closure (target: 50-70% of teacher-student gap)
+     - Save plots to `scripts/results/distillation/`
 
 #### Deliverables
 - [ ] `models/distillation.py` implemented
@@ -381,7 +386,7 @@ This project uses a **hybrid local/Colab workflow** due to GPU constraints:
 - [ ] Distilled student trained in Colab (T=4.0, α=0.7)
 - [ ] Distilled student checkpoint saved to Drive
 - [ ] Distilled student evaluated locally
-- [ ] `notebooks/04_distillation_results.ipynb` completed
+- [ ] `scripts/compare_distillation.py` completed with plots saved
 - [ ] **PAPER ARTIFACT**: Main results table (3-model comparison)
 
 #### Paper Contributions
@@ -423,13 +428,14 @@ This project uses a **hybrid local/Colab workflow** due to GPU constraints:
 
 4. **Evaluation** (LOCAL):
    - Download all ablation checkpoints
-   - Run `evaluate.py` on all models
-   - Create `notebooks/05_ablation_studies.ipynb`:
+   - Run `scripts/evaluate.py` on all models
+   - Create `scripts/analyze_ablations.py`:
      - Temperature vs accuracy curve
      - Alpha vs accuracy curve
      - Loss component analysis (distillation vs hard label)
      - Identify optimal hyperparameters
      - Statistical analysis if multiple runs available
+     - Save plots to `scripts/results/ablations/`
 
 5. **Optional: Architecture Variants** (LOCAL + COLAB):
    - Implement alternative student architectures (e.g., MobileNetV3-Large, EfficientNet-B0)
@@ -440,7 +446,7 @@ This project uses a **hybrid local/Colab workflow** due to GPU constraints:
 - [ ] Config variants created (9 total: 5 temperature + 4 alpha)
 - [ ] All ablation models trained in Colab (9 training runs)
 - [ ] All checkpoints downloaded and evaluated
-- [ ] `notebooks/05_ablation_studies.ipynb` completed
+- [ ] `scripts/analyze_ablations.py` completed with plots saved
 - [ ] **PAPER ARTIFACT**: Temperature sensitivity curve
 - [ ] **PAPER ARTIFACT**: Alpha sensitivity curve
 - [ ] **PAPER ARTIFACT**: (Optional) Architecture comparison table
@@ -466,14 +472,15 @@ This project uses a **hybrid local/Colab workflow** due to GPU constraints:
 - Perform interpretability analysis
 
 #### Tasks
-1. **Comprehensive Evaluation Notebook** (LOCAL):
-   - Create `notebooks/06_comprehensive_analysis.ipynb`:
+1. **Comprehensive Evaluation Script** (LOCAL):
+   - Create `scripts/comprehensive_analysis.py`:
      - Load all model checkpoints (teacher, student baseline, distilled student, ablation models)
      - Side-by-side predictions on same test samples
      - Per-class performance breakdown (bleached vs healthy)
      - Confidence distribution analysis
      - Calibration analysis (reliability diagrams)
      - Failure case analysis
+     - Save plots to `scripts/results/comprehensive/`
 
 2. **Interpretability Analysis** (LOCAL):
    - Generate Grad-CAM visualizations:
@@ -495,7 +502,7 @@ This project uses a **hybrid local/Colab workflow** due to GPU constraints:
    - Discuss practical deployment considerations
 
 #### Deliverables
-- [ ] `notebooks/06_comprehensive_analysis.ipynb` completed
+- [ ] `scripts/comprehensive_analysis.py` completed with plots saved
 - [ ] **PAPER ARTIFACT**: Qualitative comparison figure (Grad-CAM visualizations)
 - [ ] **PAPER ARTIFACT**: Efficiency vs accuracy tradeoff plot
 - [ ] **PAPER ARTIFACT**: Per-class performance breakdown
@@ -564,7 +571,7 @@ This project uses a **hybrid local/Colab workflow** due to GPU constraints:
 1. **Testing** (LOCAL):
    - Ensure all unit tests pass
    - Add integration tests for training pipelines (1-2 epoch runs)
-   - Verify all notebooks run end-to-end without errors
+   - Verify all analysis scripts run end-to-end without errors
 
 2. **Documentation** (LOCAL):
    - Update `AGENTS.md` with final project status
@@ -593,7 +600,7 @@ This project uses a **hybrid local/Colab workflow** due to GPU constraints:
 
 #### Deliverables
 - [ ] All tests passing
-- [ ] All notebooks verified to run end-to-end
+- [ ] All scripts verified to run end-to-end
 - [ ] Complete documentation updated
 - [ ] Reproducibility checklist created
 - [ ] Model cards created
@@ -616,8 +623,8 @@ This section is updated after each session to track overall progress and maintai
 
 ### Current Status
 - **Active Phase**: Phase 2 (Teacher Evaluation & Analysis)
-- **Phase Status**: ✅ PHASE 1 COMPLETE - Teacher model trained (83% val acc)
-- **Last Updated**: 2025-11-16
+- **Phase Status**: 🔄 IN PROGRESS - Evaluation infrastructure complete, analysis scripts pending
+- **Last Updated**: 2025-11-18
 
 ### Completed Tasks (Phase 0)
 - ✅ Created `requirements.txt` and `requirements-colab.txt`
@@ -677,6 +684,30 @@ This section is updated after each session to track overall progress and maintai
   - Checkpoints saved to Google Drive
   - Training time: ~2 hours on T4 GPU
 
+### Completed Tasks (Phase 2)
+- ✅ Restructured project from notebooks/ to scripts/ workflow (2025-11-18)
+  - Deleted misleading `notebooks/` folder (referenced non-existent `analysis/` directory)
+  - Updated all documentation (README.md, AGENTS.md, docs/colab_setup.md, .gitignore)
+  - Created `scripts/results/` directory structure
+- ✅ Downloaded teacher checkpoint from Google Drive (2025-11-18)
+  - File: `checkpoints/teacher/best_model.pth` (~97 MB)
+  - Epoch 8, 82.73% validation accuracy
+- ✅ Implemented `scripts/evaluate.py` (2025-11-18)
+  - Universal evaluation script for any model checkpoint
+  - CLI interface with argparse
+  - CPU-compatible inference with progress bar
+  - Comprehensive metrics (accuracy, precision, recall, F1, confusion matrix)
+  - Per-class performance breakdown
+  - JSON output with full metadata
+  - Fixed SSL certificate issue (pretrained=False for checkpoint loading)
+  - Fixed metrics computation (correct function signatures and argument order)
+- ✅ Evaluated teacher model on test set (2025-11-18)
+  - Test accuracy: 77.70% (5% drop from validation - slight overfitting but reasonable)
+  - Healthy: 80.0% precision, 76.7% recall, 78.3% F1 (73 samples)
+  - Bleached: 75.4% precision, 78.8% recall, 77.0% F1 (66 samples)
+  - Confusion matrix: 56/73 healthy correct, 52/66 bleached correct
+  - Results saved to `scripts/results/teacher/test_results.json`
+
 ### Completed Training Runs
 - **Teacher Model** (2025-11-16, Colab T4 GPU)
   - Epochs: 19/50 (early stopping after 10 epochs without improvement)
@@ -693,24 +724,48 @@ This section is updated after each session to track overall progress and maintai
   - Notes: Early stopping triggered, best model saved before overfitting
 
 ### Available Checkpoints (downloaded locally)
-None yet.
+- **checkpoints/teacher/best_model.pth** (2025-11-18, epoch 8)
+  - Validation accuracy: 82.73%
+  - Test accuracy: 77.70%
+  - Model parameters: 23.5M
+  - File size: ~97 MB
+  - W&B run ID: lfidb03f
+  - Notes: 5% generalization gap (val→test) indicates slight overfitting
 
 ### Current Blockers
 None.
 
 ### Next Immediate Action
-**Phase 1 COMPLETE!** 🎉 Teacher model successfully trained (83% validation accuracy).
+**Phase 2 IN PROGRESS** - Evaluation infrastructure complete, analysis scripts pending.
 
-Ready for Phase 2 (Teacher Evaluation & Analysis):
-1. **Download checkpoint from Google Drive** to local `checkpoints/teacher/`
-   - File: `coral-bleaching/checkpoints/teacher/best_model.pth`
-   - Verify download integrity (should be ~90-100 MB)
-2. **Implement `evaluate.py`** script for test set evaluation
-3. **Create evaluation notebooks**:
-   - `notebooks/01_data_exploration.ipynb` (dataset analysis)
-   - `notebooks/02_teacher_evaluation.ipynb` (teacher model results)
-4. **Generate paper artifacts**: baseline results, confusion matrix, training curves
-5. **Expected time**: 1-2 sessions for local evaluation work
+**Completed:**
+- ✅ Downloaded teacher checkpoint locally
+- ✅ Implemented and tested `scripts/evaluate.py`
+- ✅ Evaluated teacher model: 77.7% test accuracy
+
+**Next Steps (Phase 2 - Analysis & Visualization):**
+1. **Create `scripts/explore_data.py`** - Dataset exploration and visualization
+   - Load train/val/test split statistics from `data/splits/*.csv`
+   - Visualize class distribution (bleached vs healthy)
+   - Display sample image grid from both classes
+   - Analyze image resolutions and quality metrics
+   - Save plots to `scripts/results/data_exploration/`
+
+2. **Create `scripts/evaluate_teacher.py`** - Teacher model analysis
+   - Load evaluation results from `scripts/results/teacher/test_results.json`
+   - Plot confusion matrix heatmap
+   - Fetch and visualize training curves from W&B (run: lfidb03f)
+   - Generate error analysis (visualize misclassified examples)
+   - Per-class performance comparison plots
+   - Save all plots to `scripts/results/teacher/`
+
+3. **Generate paper artifacts**:
+   - Confusion matrix visualization
+   - Training/validation curves from W&B
+   - Dataset statistics table
+   - Model comparison table (for later phases)
+
+**Expected time**: 1 session for analysis scripts
 
 ### Notes
 - Project roadmap finalized with hybrid local/Colab workflow
@@ -730,6 +785,17 @@ Ready for Phase 2 (Teacher Evaluation & Analysis):
   - Completed teacher training: 83% val accuracy, early stopping at epoch 19
   - W&B tracking verified, checkpoints saved to Google Drive
   - Ready for Phase 2 evaluation
+- **Phase 2 Restructuring (2025-11-18)**: Simplified workflow from notebooks/ to scripts/
+  - Deleted `notebooks/` folder (referenced non-existent `analysis/` directory - misleading)
+  - Moved to simpler `scripts/` workflow (all evaluation/analysis code in one place)
+  - Rationale: notebooks/ referenced a complex `analysis/outputs/` structure that was never created
+  - Result: Cleaner, more maintainable structure aligned with actual codebase
+- **Phase 2 Evaluation (2025-11-18)**: Implemented and tested evaluation infrastructure
+  - Created `scripts/evaluate.py` - universal evaluation tool (works, tested)
+  - Fixed SSL cert issue: set pretrained=False when loading from checkpoint
+  - Fixed metrics computation: correct function signatures and argument order
+  - Evaluated teacher: 77.7% test accuracy (reasonable 5% drop from validation)
+  - Next: Create visualization scripts (explore_data.py, evaluate_teacher.py)
 - Test quality: ~85% real testing (minimal mocking), includes integration tests with real data, real models, real wandb offline logging
 
 ---
@@ -737,12 +803,12 @@ Ready for Phase 2 (Teacher Evaluation & Analysis):
 ## Quick Reference: Workflow Summary
 
 **LOCAL (with Claude Code):**
-1. Write/edit code (models, utils, scripts, notebooks)
+1. Write/edit code (models, utils, scripts)
 2. Write unit tests
 3. Push to GitHub
 4. Download checkpoints from Drive
-5. Run evaluations (CPU-based)
-6. Generate paper figures
+5. Run evaluations (CPU-based) using `scripts/`
+6. Generate paper figures using analysis scripts
 
 **COLAB (without Claude):**
 1. Clone repo from GitHub

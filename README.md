@@ -17,12 +17,12 @@ Knowledge distillation project for classifying coral imagery into bleached vs he
 ├── configs/              # YAML configs and guidelines for managing experiment variants
 ├── data/                 # Raw and derived datasets (see data/README.md)
 ├── models/               # Teacher, student, and distillation scaffolding
-├── notebooks/            # Exploratory analyses and evaluation summaries
+├── scripts/              # Utility scripts for data processing and evaluation
+│   └── results/          # Evaluation outputs and analysis results
 ├── utils/                # Shared helper modules (dataloaders, preprocessing, metrics, viz)
 ├── train_teacher.py      # CLI entry point to train the teacher
 ├── train_student_baseline.py
 ├── train_student_kd.py
-├── evaluate.py           # CLI entry point to run evaluations
 └── requirements.txt      # Placeholder dependency list
 ```
 
@@ -35,11 +35,13 @@ We currently expose packages (`models/`, `utils/`) at the repository root to kee
    python -m venv .venv
    source .venv/bin/activate  # On Windows: .venv\Scripts\activate
    ```
-2. Install dependencies (versions to be finalized during implementation):
+2. Install dependencies:
    ```bash
    pip install -r requirements.txt
    ```
 3. Configure environment variables for data access and experiment tracking as needed (e.g., `KAGGLE_USERNAME`, `KAGGLE_KEY`, `WANDB_API_KEY`).
+
+**Note**: This project was developed using Zed editor. For interactive Python script development, `ipykernel` is included in requirements.txt to support REPL features. Use `# %%` cell markers in scripts for cell-by-cell execution.
 
 ## Next Steps
 

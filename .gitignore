@@ -23,6 +23,3 @@ runs/
 *.pt
 *.pth
 *.ckpt
-
-# Notebooks
-notebooks/.ipynb_checkpoints/
