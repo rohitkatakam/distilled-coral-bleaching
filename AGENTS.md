@@ -348,10 +348,17 @@ This project uses a **hybrid local/Colab workflow** due to GPU constraints:
 #### Tasks
 1. **Distillation Implementation** (LOCAL):
    - Implement `models/distillation.py`:
-     - KL divergence loss with temperature scaling
+     - **IMPORTANT - Course Requirement**: Implement KL divergence **from scratch** (NOT using `torch.nn.functional.kl_div` directly as a black box)
+       - Manually compute temperature-scaled softmax: `p = softmax(logits / T)`
+       - Manually compute KL divergence: `KL(p_teacher || p_student) = sum(p_teacher * log(p_teacher / p_student))`
+       - Scale by T² (explain why in docstring: gradient magnitude correction)
+       - Document the full mathematical derivation in comments
+       - Show each computational step explicitly to demonstrate understanding of the underlying math
      - Combined loss function: `L = α * L_distill + (1-α) * L_hard`
      - Support for temperature (T) and alpha (α) from config
-     - Logging for both loss components
+     - Logging for both loss components separately
+     - Include comprehensive docstrings explaining the mathematics
+     - **Rationale**: Addresses course feedback requiring lower-level numerical implementation (not just plug-and-play library calls)
 
 2. **KD Training Script** (LOCAL):
    - Implement `train_student_kd.py`:
@@ -432,6 +439,10 @@ This project uses a **hybrid local/Colab workflow** due to GPU constraints:
    - Create `scripts/analyze_ablations.py`:
      - Temperature vs accuracy curve
      - Alpha vs accuracy curve
+     - **Temperature effect visualization**: Demonstrate how different T values "soften" probability distributions
+       - Plot softmax outputs for same logits with T ∈ {1, 2, 4, 8, 16}
+       - Show how higher T creates more uniform distributions (knowledge transfer mechanism)
+       - Helps explain WHY temperature scaling works (addresses course feedback on understanding fundamentals)
      - Loss component analysis (distillation vs hard label)
      - Identify optimal hyperparameters
      - Statistical analysis if multiple runs available
@@ -447,7 +458,8 @@ This project uses a **hybrid local/Colab workflow** due to GPU constraints:
 - [ ] All ablation models trained in Colab (9 training runs)
 - [ ] All checkpoints downloaded and evaluated
 - [ ] `scripts/analyze_ablations.py` completed with plots saved
-- [ ] **PAPER ARTIFACT**: Temperature sensitivity curve
+- [ ] **PAPER ARTIFACT**: Temperature sensitivity curve (accuracy vs T)
+- [ ] **PAPER ARTIFACT**: Temperature effect visualization (probability distribution softening)
 - [ ] **PAPER ARTIFACT**: Alpha sensitivity curve
 - [ ] **PAPER ARTIFACT**: (Optional) Architecture comparison table
 
@@ -796,6 +808,12 @@ None.
   - Fixed metrics computation: correct function signatures and argument order
   - Evaluated teacher: 77.7% test accuracy (reasonable 5% drop from validation)
   - Next: Create visualization scripts (explore_data.py, evaluate_teacher.py)
+- **Course Feedback Integration (2025-11-21)**: Updated roadmap to address instructor feedback
+  - Phase 4 now explicitly requires implementing KL divergence from scratch (not using torch.nn.functional.kl_div)
+  - Added detailed mathematical documentation requirements for distillation loss
+  - Phase 5 enhanced with temperature effect visualization (demonstrate softmax softening)
+  - Ensures project demonstrates lower-level numerical understanding (not just high-level library usage)
+  - Aligns with feedback: "build in numerical/lower-level components" and "explore how performance changes"
 - Test quality: ~85% real testing (minimal mocking), includes integration tests with real data, real models, real wandb offline logging
 
 ---
