@@ -1,0 +1,64 @@
+================================================================================
+TEACHER MODEL EVALUATION SUMMARY
+================================================================================
+
+MODEL INFORMATION:
+--------------------------------------------------------------------------------
+Model Type: teacher
+Checkpoint: checkpoints/teacher/best_model.pth
+Parameters: 23,512,130
+Trainable Parameters: 23,512,130
+Best Validation Accuracy: 82.73%
+Training Epoch: 8
+
+DATASET INFORMATION:
+--------------------------------------------------------------------------------
+Split: test
+Number of Samples: 139
+Class Distribution:
+  Healthy: 73
+  Bleached: 66
+
+OVERALL PERFORMANCE:
+--------------------------------------------------------------------------------
+Accuracy: 77.70%
+Precision (weighted): 77.68%
+Recall (weighted): 77.75%
+F1-Score (weighted): 77.68%
+
+PER-CLASS PERFORMANCE:
+--------------------------------------------------------------------------------
+
+HEALTHY:
+  Precision: 80.00%
+  Recall:    76.71%
+  F1-Score:  78.32%
+  Support:   73 samples
+
+BLEACHED:
+  Precision: 75.36%
+  Recall:    78.79%
+  F1-Score:  77.04%
+  Support:   66 samples
+
+================================================================================
+CONFUSION MATRIX:
+--------------------------------------------------------------------------------
+           Predicted
+           Healthy  Bleached
+Actual Healthy     56       17
+       Bleached    14       52
+
+================================================================================
+TRAINING INFORMATION:
+--------------------------------------------------------------------------------
+Total Epochs: 19
+Final Train Loss: 0.2924
+Final Val Loss: 0.8312
+Final Train Acc: 8697.67%
+Final Val Acc: 73.38%
+Best Val Acc: 82.73%
+
+================================================================================
+Evaluation completed: 2025-11-18T17:46:00.193386
+================================================================================

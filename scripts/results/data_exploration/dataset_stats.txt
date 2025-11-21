@@ -1,0 +1,47 @@
+================================================================================
+CORAL BLEACHING DATASET STATISTICS
+================================================================================
+
+OVERALL STATISTICS:
+--------------------------------------------------------------------------------
+Total Images: 923
+  - Healthy: 438 (47.5%)
+  - Bleached: 485 (52.5%)
+
+SPLIT STATISTICS:
+--------------------------------------------------------------------------------
+
+TRAIN Split:
+  Total: 645 (69.9% of dataset)
+  Healthy: 306 (47.4%)
+  Bleached: 339 (52.6%)
+
+VAL Split:
+  Total: 139 (15.1% of dataset)
+  Healthy: 66 (47.5%)
+  Bleached: 73 (52.5%)
+
+TEST Split:
+  Total: 139 (15.1% of dataset)
+  Healthy: 66 (47.5%)
+  Bleached: 73 (52.5%)
+
+================================================================================
+IMAGE STATISTICS (from random sample):
+--------------------------------------------------------------------------------
+Sample Size: 50 images
+
+Resolution:
+  Mean: 295 x 222 pixels
+  Std:  20 x 24 pixels
+  Min:  200 x 179 pixels
+  Max:  300 x 300 pixels
+
+File Size:
+  Mean: 27.2 KB
+  Std:  5.2 KB
+
+Image Formats:
+  JPEG: 50 images
+
+================================================================================
