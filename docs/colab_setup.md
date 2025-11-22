@@ -325,6 +325,111 @@ files.download('/content/drive/MyDrive/coral-bleaching/checkpoints/teacher/best_
 
 ---
 
+## Part 8: Student Baseline Training (Phase 3)
+
+**Prerequisites**: Ensure teacher training (Part 4) is complete before starting student baseline.
+
+### Step 15: Review Student Model Configuration
+
+The student model uses a lightweight MobileNetV3-Small architecture (~1.5M parameters vs ~23.5M for teacher):
+
+```python
+import yaml
+
+# Load config
+with open('configs/config.yaml', 'r') as f:
+    config = yaml.safe_load(f)
+
+print("Student Model Configuration:")
+print(f"  Architecture: {config['model']['student']['name']}")
+print(f"  Pretrained: {config['model']['student']['pretrained']}")
+print(f"  Parameters: ~1.5M (vs ~23.5M for teacher)")
+```
+
+### Step 16: Start Student Baseline Training
+
+**Full training (50 epochs, ~1-1.5 hours on T4 GPU)**:
+
+```python
+# Train student baseline model (no distillation)
+!python train_student_baseline.py \
+    --config configs/config.yaml \
+    --output-dir /content/drive/MyDrive/coral-bleaching/checkpoints/student_baseline \
+    --wandb-project coral-bleaching \
+    --wandb-mode online \
+    --device cuda
+```
+
+**Quick test run (2 epochs, ~3 minutes)**:
+
+```python
+# Test with 2 epochs to verify everything works
+!python train_student_baseline.py \
+    --config configs/config.yaml \
+    --output-dir /content/drive/MyDrive/coral-bleaching/checkpoints/student_baseline \
+    --epochs 2 \
+    --batch-size 16 \
+    --wandb-project coral-bleaching-test \
+    --wandb-mode online \
+    --device cuda
+```
+
+### Step 17: Monitor Student Training
+
+Monitoring works the same as teacher training (Step 10):
+- Check W&B dashboard for metrics
+- Student baseline expected performance: ~72-73% test accuracy (vs ~77-78% for teacher)
+- Checkpoints auto-save to Drive: `.../checkpoints/student_baseline/best_model.pth`
+
+### Step 18: Verify Student Checkpoint
+
+After training completes:
+
+```python
+import os
+import torch
+
+checkpoint_dir = "/content/drive/MyDrive/coral-bleaching/checkpoints/student_baseline"
+
+print("Student baseline checkpoints:")
+for filename in os.listdir(checkpoint_dir):
+    filepath = os.path.join(checkpoint_dir, filename)
+    size_mb = os.path.getsize(filepath) / (1024 * 1024)
+    print(f"  {filename}: {size_mb:.1f} MB")
+
+# Load and inspect checkpoint
+checkpoint = torch.load(f"{checkpoint_dir}/best_model.pth", map_location='cpu')
+print(f"\nCheckpoint details:")
+print(f"  Epoch: {checkpoint['epoch']}")
+print(f"  Best val acc: {checkpoint.get('best_val_acc', 0) * 100:.2f}%")
+```
+
+**Expected output**:
+```
+Student baseline checkpoints:
+  best_model.pth: ~10 MB (much smaller than teacher's ~97 MB)
+  latest_model.pth: ~10 MB
+
+Checkpoint details:
+  Epoch: 15-20 (early stopping expected)
+  Best val acc: 72-75%
+```
+
+### Expected Performance Gap
+
+The student baseline should perform slightly worse than the teacher:
+- **Teacher**: ~77-78% test accuracy
+- **Student Baseline**: ~72-73% test accuracy (~5% gap)
+- **Goal for Phase 4**: Use knowledge distillation to close this gap
+
+### Student Training Times (on T4 GPU)
+
+- **Full training (50 epochs)**: ~1-1.5 hours (faster than teacher due to smaller model)
+- **Quick test (2 epochs)**: ~3 minutes
+- **Single epoch**: ~2 minutes
+
+---
+
 ## Troubleshooting
 
 ### Issue: CUDA out of memory

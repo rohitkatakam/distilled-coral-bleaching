@@ -2,12 +2,18 @@
 """
 Universal Evaluation Script for Coral Bleaching Classifiers
 
-Evaluates any model checkpoint (teacher, student, distilled) on a specified dataset split.
+Evaluates any model checkpoint (teacher, student baseline, distilled student) on a specified dataset split.
 Computes comprehensive metrics and saves results to JSON.
 
 Usage:
-    python scripts/evaluate.py --checkpoint checkpoints/teacher/best_model.pth
-    python scripts/evaluate.py --checkpoint checkpoints/student/best_model.pth --model-type student
+    # Evaluate teacher model
+    python scripts/evaluate.py --checkpoint checkpoints/teacher/best_model.pth --model-type teacher
+
+    # Evaluate student baseline
+    python scripts/evaluate.py --checkpoint checkpoints/student_baseline/best_model.pth --model-type student
+
+    # Evaluate distilled student (Phase 4)
+    python scripts/evaluate.py --checkpoint checkpoints/student_kd/best_model.pth --model-type student
 """
 
 import argparse
@@ -26,7 +32,7 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from models.teacher import TeacherModel
-# from models.student import StudentModel  # TODO: Implement in Phase 3
+from models.student import StudentModel
 from utils.data_loader import build_dataloaders
 from utils.metrics import (
     compute_accuracy,
@@ -75,8 +81,11 @@ def load_model(checkpoint_path, config, model_type, device):
             dropout=config['model'].get('dropout', None)
         )
     elif model_type == 'student':
-        # TODO: Implement in Phase 3
-        raise NotImplementedError("Student model not yet implemented")
+        model = StudentModel(
+            num_classes=config['model'].get('num_classes', 2),
+            pretrained=False,  # Don't download ImageNet weights - we're loading from checkpoint
+            dropout=config['model'].get('dropout', None)
+        )
     else:
         raise ValueError(f"Unknown model type: {model_type}")
 
