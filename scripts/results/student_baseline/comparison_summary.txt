@@ -1,0 +1,73 @@
+================================================================================
+TEACHER vs STUDENT BASELINE COMPARISON
+================================================================================
+
+MODEL SPECIFICATIONS:
+--------------------------------------------------------------------------------
+Metric                                      Teacher              Student      Ratio
+--------------------------------------------------------------------------------
+Parameters                               23,512,130            1,519,906      15.5x
+Checkpoint Size (MB)                          269.5                 17.6      15.3x
+Training Epochs                                   8                    6           
+Best Val Accuracy (%)                         82.73                82.01           
+
+PERFORMANCE COMPARISON:
+--------------------------------------------------------------------------------
+Metric                                      Teacher              Student Difference
+--------------------------------------------------------------------------------
+Test Accuracy (%)                             77.70                78.42     +0.72
+Precision (%)                                 77.68                80.08     +2.40
+Recall (%)                                    77.75                77.78     +0.03
+F1-Score (%)                                  77.68                77.81     +0.13
+
+PER-CLASS PERFORMANCE:
+--------------------------------------------------------------------------------
+
+HEALTHY:
+  Metric                                Teacher            Student Difference
+  ----------------------------------------------------------------------------
+  Precision (%)                           80.00              74.16     -5.84
+  Recall (%)                              76.71              90.41    +13.70
+  F1-Score (%)                            78.32              81.48     +3.16
+  Support                                    73                 73           
+
+BLEACHED:
+  Metric                                Teacher            Student Difference
+  ----------------------------------------------------------------------------
+  Precision (%)                           75.36              86.00    +10.64
+  Recall (%)                              78.79              65.15    -13.64
+  F1-Score (%)                            77.04              74.14     -2.90
+  Support                                    66                 66           
+
+================================================================================
+CONFUSION MATRICES:
+--------------------------------------------------------------------------------
+
+TEACHER:
+           Predicted
+           Healthy  Bleached
+Actual Healthy     56       17
+       Bleached    14       52
+
+STUDENT:
+           Predicted
+           Healthy  Bleached
+Actual Healthy     66        7
+       Bleached    23       43
+
+================================================================================
+KEY FINDINGS:
+--------------------------------------------------------------------------------
+
+1. COMPRESSION: Student model achieves 15.5x parameter compression and 15.3x checkpoint size reduction.
+
+2. PERFORMANCE: Student model achieves nearly identical performance (+0.72% accuracy difference).
+
+3. CLASS PERFORMANCE:
+   - Healthy: Student underperforms teacher by 2.90% F1-score
+   - Bleached: Student underperforms teacher by 2.90% F1-score
+
+4. EFFICIENCY: Student model provides excellent compression with minimal
+   (or even positive) impact on accuracy, making it ideal for deployment.
+
+================================================================================

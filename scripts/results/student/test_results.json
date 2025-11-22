@@ -1,0 +1,53 @@
+{
+  "model": {
+    "type": "student",
+    "checkpoint": "checkpoints/student_baseline/best_model.pth",
+    "num_parameters": 1519906,
+    "num_trainable_parameters": 1519906,
+    "checkpoint_epoch": 6,
+    "checkpoint_best_val_acc": 0.8201438848920863
+  },
+  "dataset": {
+    "split": "test",
+    "num_samples": 139,
+    "class_distribution": {
+      "healthy": 73,
+      "bleached": 66
+    }
+  },
+  "metrics": {
+    "accuracy": 0.7841726618705036,
+    "precision": 0.8007865168539325,
+    "recall": 0.7778123702781237,
+    "f1": 0.7780970625798211,
+    "confusion_matrix": [
+      [
+        66,
+        7
+      ],
+      [
+        23,
+        43
+      ]
+    ],
+    "per_class_metrics": {
+      "healthy": {
+        "precision": 0.7415730337078652,
+        "recall": 0.9041095890410958,
+        "f1": 0.8148148148148148,
+        "support": 73
+      },
+      "bleached": {
+        "precision": 0.86,
+        "recall": 0.6515151515151515,
+        "f1": 0.7413793103448276,
+        "support": 66
+      }
+    }
+  },
+  "timestamp": "2025-11-22T16:57:09.550498",
+  "config": {
+    "batch_size": 32,
+    "device": "cpu"
+  }
+}
