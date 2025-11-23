@@ -384,7 +384,7 @@ This project uses a **hybrid local/Colab workflow** due to GPU constraints:
 
 #### Deliverables
 - [x] `models/distillation.py` implemented (manual KL + DistillationLoss with 16 dedicated pytest cases)
-- [ ] `train_student_kd.py` implemented
+- [x] `train_student_kd.py` implemented (525 lines, 22 tests passing)
 - [ ] Code pushed to GitHub
 - [ ] Distilled student trained in Colab (T=4.0, α=0.7)
 - [ ] Distilled student checkpoint saved to Drive
@@ -631,7 +631,7 @@ This section is updated after each session to track overall progress and maintai
 
 ### Current Status
 - **Active Phase**: Phase 4 (Knowledge Distillation Implementation & Training)
-- **Phase Status**: 🚧 IN PROGRESS – KD utilities merged; training script + Colab run are up next
+- **Phase Status**: 🚧 IN PROGRESS – KD training script complete; ready to push and run Colab training
 - **Last Updated**: 2025-11-23
 
 ### Completed Tasks (Phase 0)
@@ -775,7 +775,19 @@ This section is updated after each session to track overall progress and maintai
 ### Completed Tasks (Phase 4)
 - ✅ Implemented manual KD utilities in `models/distillation.py` (2025-11-23), including `temperature_scaled_softmax`, probability-space `kl_divergence`, and the blended `DistillationLoss` module with detailed docstrings on the `T^2` gradient correction.
 - ✅ Added `tests/test_distillation.py` with 16 focused cases that cover stability, math equivalence to PyTorch references, and gradient detachment (verified via `pytest tests/test_distillation.py -q`).
-- ✅ Test suite now tracks 297 passing tests (281 previous + 16 new KD cases), keeping the regression safety net strong before wiring up `train_student_kd.py`.
+- ✅ Implemented `train_student_kd.py` (2025-11-23, 525 lines)
+  - Full KD training pipeline with dual-model setup
+  - Loads frozen teacher, trains student with DistillationLoss
+  - Logs 3 loss components: total, kd_loss, hard_loss
+  - Checkpoint naming includes hyperparameters: best_model_t{T}_a{alpha}.pth
+  - 22 tests passing (tests/test_train_student_kd.py, 428 lines)
+- ✅ Updated `docs/colab_setup.md` with Part 9: KD Training (2025-11-23)
+  - Step-by-step Colab instructions for KD training
+  - Updated CLI arguments table (added --teacher-checkpoint, --temperature, --alpha)
+  - Updated training times comparison table
+  - 3-way performance comparison table
+- ✅ Test suite expanded: 319 tests passing (297 previous + 22 new KD tests)
+- ✅ Smoke test verified: Teacher loads, student trains, KD loss computes correctly
 
 ### Completed Training Runs
 - **Teacher Model** (2025-11-16, Colab T4 GPU)
@@ -825,15 +837,15 @@ This section is updated after each session to track overall progress and maintai
 None.
 
 ### Next Immediate Action
-**Phase 4 IN PROGRESS** – Distillation loss utilities landed on 2025-11-23; now we need to wire them into the KD training flow and documentation so the Colab run can kick off.
+**Phase 4 IN PROGRESS** – KD training script completed on 2025-11-23; ready to push to GitHub and run Colab training.
 
 **Immediate priorities (2025-11-23):**
-- ⏭️ Build `train_student_kd.py` that loads the frozen teacher, trains the MobileNetV3 student with `DistillationLoss`, and logs both KD + hard losses to wandb.
-- ⏭️ Update `docs/colab_setup.md` (Part 9) to explain how to point to the teacher checkpoint, configure T/α, and monitor the new metrics while training in Colab.
-- ⏭️ Once tests pass, push the code and run the default KD experiment in Colab (T=4.0, α=0.7) saving `checkpoints/student_kd/best_model_t4.0_a0.7.pth`.
-- ⏭️ Back on local CPU, run `scripts/evaluate.py` on the distilled student and author `scripts/compare_distillation.py` for the three-way comparison plus paper artifacts.
+- ⏭️ **Push to GitHub**: Commit train_student_kd.py, tests/test_train_student_kd.py, and updated docs/colab_setup.md
+- ⏭️ **Run Colab Training**: Train with default hyperparameters (T=4.0, α=0.7), monitor 3 loss components in W&B
+- ⏭️ **Download Checkpoint**: Save best_model_t4.0_a0.7.pth from Google Drive to local checkpoints/
+- ⏭️ **Evaluate & Compare**: Run scripts/evaluate.py on distilled student and create scripts/compare_distillation.py for 3-way comparison (teacher | student baseline | distilled student)
 
-**Expected Outcome**: Even though the baseline student slightly outperforms the teacher now (78.42% test accuracy with 15.5× fewer params), distillation should still deliver better calibration, stability on edge cases, and a cleaner story for the paper’s main results table.
+**Expected Outcome**: Even though the baseline student slightly outperforms the teacher now (78.42% test accuracy with 15.5× fewer params), distillation should still deliver better calibration, stability on edge cases, and a cleaner story for the paper's main results table.
 
 ### Notes
 - Project roadmap finalized with hybrid local/Colab workflow

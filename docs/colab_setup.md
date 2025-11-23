@@ -430,6 +430,201 @@ The student baseline should perform slightly worse than the teacher:
 
 ---
 
+## Part 9: Knowledge Distillation Training (Phase 4)
+
+**Prerequisites**: Both teacher (Part 4) and student baseline (Part 8) should be complete. Distillation requires a trained teacher checkpoint.
+
+### Step 19: Review Distillation Configuration
+
+Knowledge distillation uses two hyperparameters to blend teacher knowledge with hard labels:
+
+```python
+import yaml
+
+# Load config
+with open('configs/config.yaml', 'r') as f:
+    config = yaml.safe_load(f)
+
+print("Knowledge Distillation Configuration:")
+print(f"  Temperature (T): {config['model']['distillation']['temperature']}")
+print(f"  Alpha (α): {config['model']['distillation']['alpha']}")
+print(f"  Hard weight (1-α): {1 - config['model']['distillation']['alpha']}")
+print("\nWhat these mean:")
+print(f"  - Temperature: Softens probability distributions (higher = softer)")
+print(f"  - Alpha: Weight for distillation loss (0.7 = 70% KD, 30% hard labels)")
+```
+
+**Expected output**:
+```
+Knowledge Distillation Configuration:
+  Temperature (T): 4.0
+  Alpha (α): 0.7
+  Hard weight (1-α): 0.3
+
+What these mean:
+  - Temperature: Softens probability distributions (higher = softer)
+  - Alpha: Weight for distillation loss (0.7 = 70% KD, 30% hard labels)
+```
+
+### Step 20: Verify Teacher Checkpoint Exists
+
+Before starting KD training, ensure the teacher checkpoint is available:
+
+```python
+import os
+
+teacher_checkpoint = "/content/drive/MyDrive/coral-bleaching/checkpoints/teacher/best_model.pth"
+
+if os.path.exists(teacher_checkpoint):
+    size_mb = os.path.getsize(teacher_checkpoint) / (1024 * 1024)
+    print(f"✓ Teacher checkpoint found: {size_mb:.1f} MB")
+else:
+    print("✗ ERROR: Teacher checkpoint not found!")
+    print("  Please complete Part 4 (Teacher Training) first.")
+```
+
+### Step 21: Start Knowledge Distillation Training
+
+**Full training (50 epochs, ~1.5-2 hours on T4 GPU)**:
+
+```python
+# Train student with knowledge distillation
+!python train_student_kd.py \
+    --config configs/config.yaml \
+    --teacher-checkpoint /content/drive/MyDrive/coral-bleaching/checkpoints/teacher/best_model.pth \
+    --output-dir /content/drive/MyDrive/coral-bleaching/checkpoints/student_kd \
+    --wandb-project coral-bleaching \
+    --wandb-mode online \
+    --device cuda
+```
+
+**Quick test run (2 epochs, ~4 minutes)**:
+
+```python
+# Test with 2 epochs to verify everything works
+!python train_student_kd.py \
+    --config configs/config.yaml \
+    --teacher-checkpoint /content/drive/MyDrive/coral-bleaching/checkpoints/teacher/best_model.pth \
+    --output-dir /content/drive/MyDrive/coral-bleaching/checkpoints/student_kd \
+    --epochs 2 \
+    --batch-size 16 \
+    --wandb-project coral-bleaching-test \
+    --wandb-mode online \
+    --device cuda
+```
+
+**Optional: Override distillation hyperparameters**:
+
+```python
+# Experiment with different T and α values
+!python train_student_kd.py \
+    --config configs/config.yaml \
+    --teacher-checkpoint /content/drive/MyDrive/coral-bleaching/checkpoints/teacher/best_model.pth \
+    --output-dir /content/drive/MyDrive/coral-bleaching/checkpoints/student_kd \
+    --temperature 8.0 \
+    --alpha 0.5 \
+    --wandb-project coral-bleaching \
+    --wandb-mode online \
+    --device cuda
+```
+
+### Step 22: Monitor KD Training
+
+**Key difference from baseline**: KD training logs **three loss components**:
+- `train/loss`: Total loss (combined)
+- `train/kd_loss`: Knowledge distillation loss (teacher guidance)
+- `train/hard_loss`: Cross-entropy loss (hard labels)
+
+**In the notebook output**, you'll see:
+```
+Loading teacher model from .../teacher/best_model.pth...
+Teacher loaded successfully (params: 23,528,522)
+Teacher frozen: all parameters have requires_grad=False
+
+Epoch [1] Batch [10/21] Loss: 1.2345 (KD: 0.8901, Hard: 0.3444) Acc: 65.62%
+```
+
+**In Weights & Biases**:
+1. Navigate to your run in W&B dashboard
+2. Monitor these metrics:
+   - `train/kd_loss` and `train/hard_loss` - loss components
+   - `val/loss` (CE), `val/kd_loss`, `val/hard_loss` - validation losses
+   - `val/accuracy` - student performance (should improve over baseline)
+3. Compare KD run to baseline student run:
+   - KD student should achieve higher validation accuracy
+   - Better calibration (probability distributions closer to teacher)
+
+**Training will automatically**:
+- Load teacher in eval mode (frozen weights)
+- Save best model to Drive with hyperparameters in filename
+- Stop early if validation CE loss doesn't improve for 10 epochs
+
+### Step 23: Verify KD Checkpoint Saved
+
+After training completes:
+
+```python
+import os
+import torch
+
+checkpoint_dir = "/content/drive/MyDrive/coral-bleaching/checkpoints/student_kd"
+
+print("Knowledge distillation checkpoints:")
+for filename in os.listdir(checkpoint_dir):
+    filepath = os.path.join(checkpoint_dir, filename)
+    size_mb = os.path.getsize(filepath) / (1024 * 1024)
+    print(f"  {filename}: {size_mb:.1f} MB")
+
+# Load and inspect checkpoint
+best_checkpoint = f"{checkpoint_dir}/best_model_t4.0_a0.7.pth"
+checkpoint = torch.load(best_checkpoint, map_location='cpu')
+print(f"\nCheckpoint details:")
+print(f"  Epoch: {checkpoint['epoch']}")
+print(f"  Best val acc: {checkpoint.get('best_val_acc', 0) * 100:.2f}%")
+print(f"  Temperature: {checkpoint.get('temperature', 'N/A')}")
+print(f"  Alpha: {checkpoint.get('alpha', 'N/A')}")
+print(f"  Teacher checkpoint: {checkpoint.get('teacher_checkpoint', 'N/A')}")
+```
+
+**Expected output**:
+```
+Knowledge distillation checkpoints:
+  best_model_t4.0_a0.7.pth: ~10 MB
+  latest_model.pth: ~10 MB
+
+Checkpoint details:
+  Epoch: 12-18 (early stopping expected)
+  Best val acc: 75-77%
+  Temperature: 4.0
+  Alpha: 0.7
+  Teacher checkpoint: .../teacher/best_model.pth
+```
+
+**Note**: The checkpoint filename includes T and α to track hyperparameters for Phase 5 ablation studies.
+
+### Step 24: Expected Performance Comparison
+
+Three-way comparison of all models:
+
+| Model | Test Accuracy | Parameters | Disk Size | Training Time |
+|-------|---------------|------------|-----------|---------------|
+| Teacher | ~77-78% | 23.5M | ~97 MB | ~2-3 hours |
+| Student Baseline | ~72-73% | 1.5M | ~10 MB | ~1-1.5 hours |
+| **Student + KD** | **~75-77%** | **1.5M** | **~10 MB** | **~1.5-2 hours** |
+
+**Key insights**:
+- **Performance**: KD closes 60-80% of the teacher-student gap
+- **Efficiency**: Same model size as baseline, but better accuracy
+- **Calibration**: KD student produces better-calibrated probabilities (matches teacher confidence)
+
+### KD Training Times (on T4 GPU)
+
+- **Full training (50 epochs)**: ~1.5-2 hours (slightly slower than baseline due to teacher forward pass)
+- **Quick test (2 epochs)**: ~4 minutes
+- **Single epoch**: ~3 minutes
+
+---
+
 ## Troubleshooting
 
 ### Issue: CUDA out of memory
@@ -508,6 +703,8 @@ Logs will be saved locally and can be synced later:
 
 ### CLI Arguments
 
+**Common arguments** (teacher, student baseline, KD):
+
 | Argument | Default | Description |
 |----------|---------|-------------|
 | `--config` | `configs/config.yaml` | Path to config file |
@@ -520,6 +717,14 @@ Logs will be saved locally and can be synced later:
 | `--wandb-project` | `coral-bleaching` | W&B project name |
 | `--wandb-mode` | `online` | W&B mode (online/offline/disabled) |
 | `--no-pretrained` | False | Don't use pretrained ImageNet weights |
+
+**Knowledge distillation specific** (train_student_kd.py only):
+
+| Argument | Default | Description |
+|----------|---------|-------------|
+| `--teacher-checkpoint` | **REQUIRED** | Path to trained teacher checkpoint |
+| `--temperature` | 4.0 (from config) | Distillation temperature (softens distributions) |
+| `--alpha` | 0.7 (from config) | KD loss weight (1-α for hard label weight) |
 
 ### Example Configurations
 
@@ -542,9 +747,13 @@ Logs will be saved locally and can be synced later:
 
 ## Expected Training Times (on T4 GPU)
 
-- **Full training (50 epochs)**: ~2-3 hours
-- **Quick test (2 epochs)**: ~5 minutes
-- **Single epoch**: ~3-4 minutes
+| Training Type | Full (50 epochs) | Quick Test (2 epochs) | Single Epoch |
+|--------------|------------------|----------------------|--------------|
+| **Teacher** | ~2-3 hours | ~5 minutes | ~3-4 minutes |
+| **Student Baseline** | ~1-1.5 hours | ~3 minutes | ~2 minutes |
+| **Student + KD** | ~1.5-2 hours | ~4 minutes | ~3 minutes |
+
+**Note**: KD training is slightly slower than baseline due to teacher forward pass, but faster than teacher due to smaller student model.
 
 ---
 
