@@ -485,10 +485,16 @@ else:
 
 ### Step 21: Start Knowledge Distillation Training
 
+Choose your training approach based on your goals:
+
+#### Option A: Quick Start (Single Configuration)
+
+Train with default hyperparameters (T=4.0, α=0.7) to quickly verify KD works:
+
 **Full training (50 epochs, ~1.5-2 hours on T4 GPU)**:
 
 ```python
-# Train student with knowledge distillation
+# Train student with knowledge distillation (default hyperparameters)
 !python train_student_kd.py \
     --config configs/config.yaml \
     --teacher-checkpoint /content/drive/MyDrive/coral-bleaching/checkpoints/teacher/best_model.pth \
@@ -513,20 +519,186 @@ else:
     --device cuda
 ```
 
-**Optional: Override distillation hyperparameters**:
+---
+
+#### Option B: Strategic Hyperparameter Exploration (Recommended for Paper)
+
+For comprehensive ablation studies, train **4 strategic configurations** that explore the temperature/alpha space. This provides robust evidence for your paper and helps identify optimal hyperparameters.
+
+**Rationale:**
+- **T (Temperature)**: Controls softness of probability distributions (1=hard, higher=softer)
+- **α (Alpha)**: Balances teacher guidance vs hard labels (0=only labels, 1=only teacher)
+- **Strategy**: Sample key points in hyperparameter space to understand sensitivity
+- **Cost**: ~6-8 hours total training time (feasible due to fast training)
+- **Benefit**: Multiple data points for Phase 4 comparison, sets up Phase 5 ablation analysis
+
+**Before starting:** Check if you've already trained the default configuration:
 
 ```python
-# Experiment with different T and α values
+import os
+
+# Check if default config already trained
+default_checkpoint = "/content/drive/MyDrive/coral-bleaching/checkpoints/student_kd/best_model_t4.0_a0.7.pth"
+if os.path.exists(default_checkpoint):
+    print("✓ Default configuration (T=4.0, α=0.7) already trained")
+    print("  You can skip Configuration 1 below and reuse this checkpoint")
+else:
+    print("→ Need to train all 4 configurations")
+```
+
+---
+
+**Configuration 1: Default (T=4.0, α=0.7) - Balanced approach** [~1.5-2 hours]
+
+Moderate temperature with teacher-focused weighting (70% KD, 30% hard labels).
+
+```python
+# Config 1: Default - balanced distillation
 !python train_student_kd.py \
     --config configs/config.yaml \
     --teacher-checkpoint /content/drive/MyDrive/coral-bleaching/checkpoints/teacher/best_model.pth \
     --output-dir /content/drive/MyDrive/coral-bleaching/checkpoints/student_kd \
-    --temperature 8.0 \
+    --temperature 4.0 \
+    --alpha 0.7 \
+    --wandb-project coral-bleaching \
+    --wandb-mode online \
+    --device cuda
+```
+
+**Checkpoint**: `best_model_t4.0_a0.7.pth` | **W&B run**: `student-kd-t4.0-a0.7`
+
+---
+
+**Configuration 2: Conservative (T=2.0, α=0.5) - Sharper distributions, balanced loss** [~1.5-2 hours]
+
+Lower temperature (less softening) with equal weight on teacher and labels.
+
+```python
+# Config 2: Conservative - less aggressive distillation
+!python train_student_kd.py \
+    --config configs/config.yaml \
+    --teacher-checkpoint /content/drive/MyDrive/coral-bleaching/checkpoints/teacher/best_model.pth \
+    --output-dir /content/drive/MyDrive/coral-bleaching/checkpoints/student_kd \
+    --temperature 2.0 \
     --alpha 0.5 \
     --wandb-project coral-bleaching \
     --wandb-mode online \
     --device cuda
 ```
+
+**Checkpoint**: `best_model_t2.0_a0.5.pth` | **W&B run**: `student-kd-t2.0-a0.5`
+**Hypothesis**: Less aggressive distillation may stay closer to baseline performance.
+
+---
+
+**Configuration 3: Aggressive (T=8.0, α=0.9) - Very soft distributions, teacher-dominant** [~1.5-2 hours]
+
+High temperature (maximum softening) with heavy teacher weighting (90% KD, 10% hard labels).
+
+```python
+# Config 3: Aggressive - maximum knowledge transfer
+!python train_student_kd.py \
+    --config configs/config.yaml \
+    --teacher-checkpoint /content/drive/MyDrive/coral-bleaching/checkpoints/teacher/best_model.pth \
+    --output-dir /content/drive/MyDrive/coral-bleaching/checkpoints/student_kd \
+    --temperature 8.0 \
+    --alpha 0.9 \
+    --wandb-project coral-bleaching \
+    --wandb-mode online \
+    --device cuda
+```
+
+**Checkpoint**: `best_model_t8.0_a0.9.pth` | **W&B run**: `student-kd-t8.0-a0.9`
+**Hypothesis**: Maximum soft target transfer, best calibration, may achieve highest accuracy.
+
+---
+
+**Configuration 4: Label-Focused (T=4.0, α=0.3) - Moderate softening, label-dominant** [~1.5-2 hours]
+
+Same temperature as default but prioritizes hard labels (30% KD, 70% hard labels).
+
+```python
+# Config 4: Label-focused - tests alpha sensitivity
+!python train_student_kd.py \
+    --config configs/config.yaml \
+    --teacher-checkpoint /content/drive/MyDrive/coral-bleaching/checkpoints/teacher/best_model.pth \
+    --output-dir /content/drive/MyDrive/coral-bleaching/checkpoints/student_kd \
+    --temperature 4.0 \
+    --alpha 0.3 \
+    --wandb-project coral-bleaching \
+    --wandb-mode online \
+    --device cuda
+```
+
+**Checkpoint**: `best_model_t4.0_a0.3.pth` | **W&B run**: `student-kd-t4.0-a0.3`
+**Hypothesis**: Closer to baseline behavior, isolates alpha sensitivity at fixed temperature.
+
+---
+
+**Tips for Sequential Training:**
+
+- **Run one at a time** to avoid memory issues
+- **Monitor W&B** between runs to verify completion
+- All checkpoints save to same directory (`student_kd/`) with unique filenames
+- **Total time**: ~6-8 hours (can split across multiple Colab sessions if needed)
+- **Keep browser tab open** during training (or enable Colab Pro background execution)
+- Each configuration takes ~10-15 minutes per epoch, with early stopping around 12-20 epochs
+
+**Verification After All 4 Runs:**
+
+```python
+import os
+
+checkpoint_dir = "/content/drive/MyDrive/coral-bleaching/checkpoints/student_kd"
+
+print("All KD checkpoints:")
+expected_files = [
+    "best_model_t4.0_a0.7.pth",
+    "best_model_t2.0_a0.5.pth",
+    "best_model_t8.0_a0.9.pth",
+    "best_model_t4.0_a0.3.pth"
+]
+
+for filename in expected_files:
+    filepath = os.path.join(checkpoint_dir, filename)
+    if os.path.exists(filepath):
+        size_mb = os.path.getsize(filepath) / (1024 * 1024)
+        print(f"  ✓ {filename}: {size_mb:.1f} MB")
+    else:
+        print(f"  ✗ {filename}: MISSING")
+```
+
+**Expected output:**
+```
+All KD checkpoints:
+  ✓ best_model_t4.0_a0.7.pth: ~10 MB
+  ✓ best_model_t2.0_a0.5.pth: ~10 MB
+  ✓ best_model_t8.0_a0.9.pth: ~10 MB
+  ✓ best_model_t4.0_a0.3.pth: ~10 MB
+```
+
+**W&B Dashboard Organization:**
+
+You'll see 4 separate runs in your `coral-bleaching` project:
+- `student-kd-t4.0-a0.7` (default)
+- `student-kd-t2.0-a0.5` (conservative)
+- `student-kd-t8.0-a0.9` (aggressive)
+- `student-kd-t4.0-a0.3` (label-focused)
+
+**To compare runs side-by-side in W&B:**
+1. Go to your project dashboard
+2. Select all 4 KD runs (use checkboxes)
+3. Click "Compare runs" to see metrics overlaid
+4. Useful comparisons: validation accuracy curves, loss components (kd_loss vs hard_loss)
+
+**Next Steps (Phase 5 Analysis):**
+After completing all 4 training runs:
+1. Download all 4 checkpoints to local machine
+2. Run `scripts/evaluate.py` on each model to get test metrics
+3. Create `scripts/analyze_ablations.py` for comprehensive comparison
+4. Generate ablation figures for paper (temperature sensitivity, alpha sensitivity)
+
+---
 
 ### Step 22: Monitor KD Training
 
@@ -604,7 +776,7 @@ Checkpoint details:
 
 ### Step 24: Expected Performance Comparison
 
-Three-way comparison of all models:
+Three-way comparison of all models (based on default KD configuration T=4.0, α=0.7):
 
 | Model | Test Accuracy | Parameters | Disk Size | Training Time |
 |-------|---------------|------------|-----------|---------------|
@@ -616,6 +788,13 @@ Three-way comparison of all models:
 - **Performance**: KD closes 60-80% of the teacher-student gap
 - **Efficiency**: Same model size as baseline, but better accuracy
 - **Calibration**: KD student produces better-calibrated probabilities (matches teacher confidence)
+
+**Note on Strategic Sampling (Option B)**: If you trained all 4 configurations, performance may vary across hyperparameter choices. The strategic sampling approach provides:
+- Multiple evidence points for Phase 4 paper results
+- Data for Phase 5 ablation analysis (temperature sensitivity, alpha sensitivity curves)
+- Identification of optimal hyperparameters for this specific dataset
+
+Actual results will be analyzed locally using `scripts/evaluate.py` and `scripts/analyze_ablations.py`.
 
 ### KD Training Times (on T4 GPU)
 
