@@ -53,7 +53,7 @@ def load_checkpoint(checkpoint_path):
     if not Path(checkpoint_path).exists():
         raise FileNotFoundError(f"Checkpoint not found: {checkpoint_path}")
 
-    checkpoint = torch.load(checkpoint_path, map_location='cpu')
+    checkpoint = torch.load(checkpoint_path, map_location='cpu', weights_only=False)
     return checkpoint
 
 
