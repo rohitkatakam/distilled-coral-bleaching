@@ -23,3 +23,5 @@ runs/
 *.pt
 *.pth
 *.ckpt
+
+paper/
