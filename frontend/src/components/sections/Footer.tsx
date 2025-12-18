@@ -1,38 +1,45 @@
 import React from 'react';
-import { Github, Download } from 'lucide-react';
+import { Github, FileText } from 'lucide-react';
 
 export const Footer: React.FC = () => {
   return (
-    <footer className="bg-ocean-950 text-ocean-200 py-12 border-t border-ocean-900">
-      <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-6">
-        
-        <div className="text-center md:text-left">
-          <h3 className="text-xl font-bold text-white mb-2">Distilled Coral Bleaching</h3>
-          <p className="text-sm text-ocean-400">Efficient AI for Marine Conservation</p>
+    <footer className="bg-gray-100 text-gray-700 py-12 border-t border-gray-300">
+      <div className="max-w-4xl mx-auto px-4">
+        {/* Main footer content */}
+        <div className="text-center mb-8">
+          <h3 className="text-lg font-bold text-black mb-2">Distilled Coral Bleaching</h3>
+          <p className="text-sm text-gray-600 mb-1">Knowledge Distillation for Coral Bleaching Classification</p>
+          <p className="text-sm text-gray-600">Rohit Katakam &middot; December 2025</p>
         </div>
 
-        <div className="flex items-center gap-6">
-          <a 
-            href="https://github.com/rohitkatakam/distilled-coral-bleaching" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 hover:text-white transition-colors"
-          >
-            <Github size={20} />
-            <span>GitHub</span>
-          </a>
-          <a 
-            href="/assets/earth_paper.pdf" 
+        {/* Links */}
+        <div className="flex flex-wrap items-center justify-center gap-6 mb-8">
+          <a
+            href="/earth_paper.pdf"
             target="_blank"
-            className="flex items-center gap-2 hover:text-white transition-colors"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 text-black hover:text-gray-600 transition-colors font-medium"
           >
-            <Download size={20} />
-            <span>Download Paper</span>
+            <FileText size={18} />
+            <span>Full Paper (PDF)</span>
+          </a>
+          <a
+            href="https://github.com/rohitkatakam/distilled-coral-bleaching"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 text-black hover:text-gray-600 transition-colors font-medium"
+          >
+            <Github size={18} />
+            <span>GitHub Repository</span>
           </a>
         </div>
 
-        <div className="text-sm text-ocean-500">
-          &copy; {new Date().getFullYear()} Project Team
+        {/* AI Acknowledgment */}
+        <div className="text-center text-xs text-gray-500 border-t border-gray-300 pt-6">
+          <p className="mb-2">
+            <strong>AI Acknowledgment:</strong> This project used AI for research, code debugging, LaTeX formatting, and proofreading.
+          </p>
+          <p>&copy; {new Date().getFullYear()} Rohit Katakam</p>
         </div>
       </div>
     </footer>

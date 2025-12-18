@@ -7,16 +7,16 @@ interface SectionProps {
   background?: 'light' | 'dark' | 'gradient';
 }
 
-export const Section: React.FC<SectionProps> = ({ 
-  id, 
-  children, 
-  className = '', 
-  background = 'light' 
+export const Section: React.FC<SectionProps> = ({
+  id,
+  children,
+  className = '',
+  background = 'light'
 }) => {
   const backgrounds = {
-    light: "bg-ocean-50",
-    dark: "bg-ocean-900 text-white",
-    gradient: "bg-gradient-to-br from-ocean-900 via-ocean-800 to-ocean-900 text-white"
+    light: "bg-white",
+    dark: "bg-black text-white",
+    gradient: "bg-white"
   };
 
   return (
